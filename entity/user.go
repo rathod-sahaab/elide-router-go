@@ -3,13 +3,14 @@ package entity
 import (
 	"time"
 
+	"github.com/go-playground/validator"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
 	ID        ID
-	Name      string
-	Email     string
+	Name      string `validate:"required"`
+	Email     string `validate:"required,email"`
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
@@ -17,6 +18,7 @@ type User struct {
 }
 
 func NewUser(email string, password string, name string) (*User, error) {
+	// TODO: password validation
 	password_hash, err := generatePassword(password)
 
 	if err != nil {
@@ -49,15 +51,9 @@ func (u *User) ValidatePassword(p string) error {
 }
 
 func (user *User) Validate() error {
-	if user.Email == "" {
-		return ErrInvalidEntity
-	}
+	validate := validator.New()
 
-	if user.Password == "" {
-		return ErrInvalidEntity
-	}
-
-	return nil
+	return validate.Struct(user)
 }
 
 func generatePassword(raw_password string) (string, error) {

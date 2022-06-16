@@ -1,11 +1,15 @@
 package entity
 
-import "time"
+import (
+	"time"
+
+	"github.com/go-playground/validator"
+)
 
 type Link struct {
 	ID        ID
-	Slug      string
-	Target    string
+	Slug      string `validate:"required,slug"`
+	Target    string `validate:"required,url"`
 	CreatorID ID
 	GroupID   ID
 	ProjectID ID
@@ -34,13 +38,19 @@ func NewLink(slug string, target string, creatorID ID, groupID ID, projectID ID)
 }
 
 func (link *Link) Validate() error {
-	if link.Slug == "" {
-		return ErrInvalidEntity
-	}
+	validate := validator.New()
 
-	if link.Target == "" {
-		return ErrInvalidEntity
-	}
+	validate.RegisterValidation("slug", slugValidator)
 
-	return nil
+	return validate.Struct(link)
+}
+
+func slugValidator(fl validator.FieldLevel) bool {
+	slug := fl.Field().String()
+
+	// TODO: implement better slug validation, using regexp
+	if slug == "" || slug == "api" {
+		return false
+	}
+	return true
 }
